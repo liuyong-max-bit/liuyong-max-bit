@@ -1,21 +1,26 @@
 
-{% render 'button', link: block.settings.link %}
+
+{% assign button_collection = closest.collection %}
+{% assign button_url = button_collection.url %}
+
+{% if button_collection.products_count > section.settings.max_products %}
+  {% render 'button', link: button_url %}
+{% endif %}
 
 {% schema %}
 {
-  "name": "t:names.button",
+  "name": "t:names.product_list_button",
   "tag": null,
   "settings": [
+    {
+      "type": "paragraph",
+      "content": "t:content.visible_if_collection_has_more_products"
+    },
     {
       "type": "text",
       "id": "label",
       "label": "t:settings.label",
       "default": "t:text_defaults.button_label"
-    },
-    {
-      "type": "url",
-      "id": "link",
-      "label": "t:settings.link"
     },
     {
       "type": "checkbox",
@@ -104,10 +109,11 @@
   ],
   "presets": [
     {
-      "name": "t:names.button",
-      "category": "t:categories.basic",
+      "name": "t:names.product_list_button",
+      "category": "t:categories.collection",
       "settings": {
-        "link": "shopify://collections/all"
+        "label": "t:text_defaults.view_all_button_label",
+        "style_class": "button-secondary"
       }
     }
   ]

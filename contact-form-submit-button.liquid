@@ -1,27 +1,30 @@
 
-{% render 'button', link: block.settings.link %}
+{%- assign block_settings = block.settings -%}
+<button
+  type="submit"
+  class="button submit-button size-style {{ block_settings.style_class }}"
+  style="{% render 'size-style', settings: block_settings %}"
+  {{ block.shopify_attributes }}
+>
+  {{ block_settings.label }}
+</button>
+
+{% stylesheet %}
+  .submit-button {
+    min-width: max-content;
+  }
+{% endstylesheet %}
 
 {% schema %}
 {
-  "name": "t:names.button",
+  "name": "t:names.submit_button",
   "tag": null,
   "settings": [
     {
       "type": "text",
       "id": "label",
       "label": "t:settings.label",
-      "default": "t:text_defaults.button_label"
-    },
-    {
-      "type": "url",
-      "id": "link",
-      "label": "t:settings.link"
-    },
-    {
-      "type": "checkbox",
-      "id": "open_in_new_tab",
-      "label": "t:settings.open_new_tab",
-      "default": false
+      "default": "t:text_defaults.contact_form_button_label"
     },
     {
       "type": "select",
@@ -35,10 +38,6 @@
         {
           "value": "button-secondary",
           "label": "t:options.secondary"
-        },
-        {
-          "value": "link",
-          "label": "t:options.link"
         }
       ],
       "default": "button"
@@ -66,13 +65,13 @@
     {
       "type": "range",
       "id": "custom_width",
-      "label": "t:settings.custom_width",
+      "label": "t:settings.width",
       "min": 0,
       "max": 100,
       "step": 1,
       "unit": "%",
       "default": 100,
-      "visible_if": "{{ block.settings.width == \"custom\" }}"
+      "visible_if": "{{ block.settings.width == 'custom' }}"
     },
     {
       "type": "select",
@@ -93,23 +92,15 @@
     {
       "type": "range",
       "id": "custom_width_mobile",
-      "label": "t:settings.custom_width",
+      "label": "t:settings.width",
       "min": 0,
       "max": 100,
       "step": 1,
       "unit": "%",
       "default": 100,
-      "visible_if": "{{ block.settings.width_mobile == \"custom\" }}"
+      "visible_if": "{{ block.settings.width_mobile == 'custom' }}"
     }
   ],
-  "presets": [
-    {
-      "name": "t:names.button",
-      "category": "t:categories.basic",
-      "settings": {
-        "link": "shopify://collections/all"
-      }
-    }
-  ]
+  "presets": []
 }
 {% endschema %}

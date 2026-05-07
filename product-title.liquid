@@ -1,137 +1,75 @@
 
 
-{%- liquid
-  assign block_settings = block.settings
-  assign product_resource = closest.product
-  assign selected_variant = product_resource.selected_or_first_available_variant
--%}
-
-{% liquid
-  if block_settings.type_preset == 'rte' or block_settings.type_preset == 'paragraph'
-    assign is_rte = true
-  endif
-
-  capture text_block_classes
-    if block_settings.width == '100%'
-      echo 'text-block--align-' | append: block_settings.alignment
-      if block_settings.max_width == 'none'
-        echo ' text-block--full-width'
-      endif
-    endif
-    if block_settings.type_preset == 'custom'
-      echo ' custom-typography'
-      if block_settings.font_size != ''
-        echo ' custom-font-size'
-      endif
-      if block_settings.color != ''
-        echo ' custom-color'
-      endif
-    endif
-    if block_settings.background
-      echo ' text-block--background'
-    endif
-    if is_rte
-      echo ' rte'
-    endif
-  endcapture
-%}
-
-<product-price
-  class="text-block {{ text_block_classes }} text-{{ block_settings.alignment }} {{ block_settings.type_preset | default: 'paragraph' }} spacing-style"
-  data-block-id="{{ block.id }}"
-  data-product-id="{{ product_resource.id }}"
-  style="
-    {% render 'typography-style', settings: block_settings %}
-    {% render 'spacing-style', settings: block_settings %}
-    --width: {{ block_settings.width }};
-  "
-  {{ block.shopify_attributes }}
->
-  {% render 'price',
-    show_unit_price: true,
-    product_resource: product_resource,
-    show_sale_price_first: block_settings.show_sale_price_first
-  %}
-
-  {% if block_settings.show_tax_info %}
-    <div class="tax-note">
-      {%- if cart.duties_included and cart.taxes_included -%}
-        {{ 'content.duties_and_taxes_included' | t }}
-      {%- elsif cart.taxes_included -%}
-        {{ 'content.taxes_included' | t }}
-      {%- elsif cart.duties_included -%}
-        {{ 'content.duties_included' | t }}
-      {%- endif -%}
-
-      {%- if shop.shipping_policy.body != blank -%}
-        {{ 'content.shipping_policy' | t }}
-      {%- endif -%}
-    </div>
-  {% endif %}
-
-  {%- if selected_variant != blank and block_settings.show_installments -%}
-    <div class="installments">
-      {%- assign product_form_installment_id = 'product-form-installment-' | append: block.id -%}
-      {%- form 'product', product_resource, id: product_form_installment_id, class: 'payment-terms' -%}
-        <input
-          type="hidden"
-          name="id"
-          value="{{ selected_variant.id }}"
-        >
-        {{ form | payment_terms }}
-      {%- endform -%}
-    </div>
-  {%- endif -%}
-</product-price>
-
-{% # theme-check-disable %}
-{% stylesheet %}
-  .tax-note:empty {
-    display: none;
-  }
-
-  form.payment-terms {
-    padding-top: 0.5em;
-    font-size: min(0.85em, var(--font-paragraph--size));
-    font-weight: var(--font-paragraph--weight);
-    color: rgb(var(--color-foreground-rgb) / var(--opacity-subdued-text));
-  }
-
-  .installments:not(:has(shopify-payment-terms)) {
-    display: none;
-  }
-{% endstylesheet %}
+{% if closest.product == blank %}
+  {% assign text = 'placeholders.product_title' | t %}
+  {% assign product_title = '<p>' | append: text | append: '</p>' %}
+  {% render 'text', fallback_text: product_title, block: block %}
+{% elsif closest.product != blank %}
+  {% assign product_title = '<p>' | append: closest.product.title | append: '</p>' %}
+  <a
+    class="contents user-select-text"
+    ref="productTitleLink"
+    href="{% render 'product-card-variant-url', product: closest.product %}"
+  >
+    {% render 'text', fallback_text: product_title, block: block %}
+  </a>
+{% endif %}
 
 {% schema %}
 {
-  "name": "t:names.product_price",
+  "name": "t:names.product_title",
   "tag": null,
   "settings": [
     {
       "type": "paragraph",
-      "content": "t:content.resource_reference_product_price"
+      "content": "t:content.resource_reference_product_title"
     },
     {
-      "type": "paragraph",
-      "content": "t:content.edit_price_in_theme_settings"
+      "type": "header",
+      "content": "t:content.layout"
     },
     {
-      "type": "checkbox",
-      "id": "show_sale_price_first",
-      "label": "t:settings.show_sale_price_first",
-      "default": true
+      "type": "select",
+      "id": "width",
+      "label": "t:settings.width",
+      "options": [
+        {
+          "value": "fit-content",
+          "label": "t:options.fit"
+        },
+        {
+          "value": "100%",
+          "label": "t:options.fill"
+        }
+      ],
+      "default": "fit-content"
     },
     {
-      "type": "checkbox",
-      "id": "show_installments",
-      "label": "t:settings.installments",
-      "default": false
+      "type": "select",
+      "id": "max_width",
+      "label": "t:settings.max_width",
+      "options": [
+        {
+          "value": "narrow",
+          "label": "t:options.narrow"
+        },
+        {
+          "value": "normal",
+          "label": "t:options.normal"
+        },
+        {
+          "value": "none",
+          "label": "t:options.none"
+        }
+      ],
+      "default": "normal"
     },
     {
-      "type": "checkbox",
-      "id": "show_tax_info",
-      "label": "t:settings.show_tax_info",
-      "default": false
+      "type": "text_alignment",
+      "id": "alignment",
+      "label": "t:settings.alignment",
+      "default": "left",
+      "visible_if": "{{ block.settings.width == '100%' }}"
     },
     {
       "type": "header",
@@ -143,7 +81,7 @@
       "label": "t:settings.preset",
       "options": [
         {
-          "value": "",
+          "value": "rte",
           "label": "t:options.default"
         },
         {
@@ -179,30 +117,8 @@
           "label": "t:options.custom"
         }
       ],
+      "default": "rte",
       "info": "t:info.edit_presets_in_theme_settings"
-    },
-    {
-      "type": "select",
-      "id": "width",
-      "label": "t:settings.width",
-      "options": [
-        {
-          "value": "fit-content",
-          "label": "t:options.fit_content"
-        },
-        {
-          "value": "100%",
-          "label": "t:options.fill"
-        }
-      ],
-      "default": "100%"
-    },
-    {
-      "type": "text_alignment",
-      "id": "alignment",
-      "label": "t:settings.alignment",
-      "default": "left",
-      "visible_if": "{{ block.settings.width != 'fit-content' }}"
     },
     {
       "type": "select",
@@ -367,6 +283,26 @@
     },
     {
       "type": "select",
+      "id": "wrap",
+      "label": "t:settings.wrap",
+      "options": [
+        {
+          "value": "pretty",
+          "label": "t:options.pretty"
+        },
+        {
+          "value": "balance",
+          "label": "t:options.balance"
+        },
+        {
+          "value": "nowrap",
+          "label": "t:options.none"
+        }
+      ],
+      "visible_if": "{{ block.settings.type_preset == 'custom' }}"
+    },
+    {
+      "type": "select",
       "id": "color",
       "label": "t:settings.color",
       "options": [
@@ -385,6 +321,34 @@
       ],
       "default": "var(--color-foreground)",
       "visible_if": "{{ block.settings.type_preset != 'rte' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:content.appearance"
+    },
+    {
+      "type": "checkbox",
+      "id": "background",
+      "label": "t:settings.background",
+      "default": false
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "t:settings.background_color",
+      "alpha": true,
+      "default": "#00000026",
+      "visible_if": "{{ block.settings.background }}"
+    },
+    {
+      "type": "range",
+      "id": "corner_radius",
+      "label": "t:settings.corner_radius",
+      "default": 0,
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "visible_if": "{{ block.settings.background }}"
     },
     {
       "type": "header",
@@ -433,10 +397,9 @@
   ],
   "presets": [
     {
-      "name": "t:names.product_price",
+      "name": "t:names.title",
       "category": "t:categories.product"
     }
   ]
 }
 {% endschema %}
-{% # theme-check-enable %}

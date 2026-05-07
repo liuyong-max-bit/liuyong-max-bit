@@ -1,6 +1,6 @@
 
 
-{%- capture children %}
+{% capture children %}
   {% content_for 'blocks' %}
 {% endcapture %}
 
@@ -12,13 +12,31 @@
   "tag": null,
   "blocks": [
     {
-      "type": "@theme"
+      "type": "text"
+    },
+    {
+      "type": "image"
+    },
+    {
+      "type": "price"
+    },
+    {
+      "type": "review"
+    },
+    {
+      "type": "swatches"
+    },
+    {
+      "type": "_product-card-group"
+    },
+    {
+      "type": "product-title"
+    },
+    {
+      "type": "custom-liquid"
     },
     {
       "type": "@app"
-    },
-    {
-      "type": "_divider"
     }
   ],
   "settings": [
@@ -447,12 +465,6 @@
       "id": "open_in_new_tab",
       "label": "t:settings.open_new_tab",
       "default": false
-    },
-    {
-      "type": "text",
-      "id": "placeholder",
-      "label": "t:settings.image",
-      "visible_if": "{{ false }}"
     },
     {
       "type": "header",
